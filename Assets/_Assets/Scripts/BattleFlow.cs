@@ -5,7 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class BattleFlow : MonoBehaviour
 {
-    public GameObject gameOverUI; 
+    public BossHealth bossHealth;
+    public GameObject gameOverUI;
     public GameObject gameWinUI;
     public PlayerHealth playerHealth;
     public GameObject bgMusic;
@@ -14,32 +15,29 @@ public class BattleFlow : MonoBehaviour
     {
         gameWinUI.SetActive(false);
         gameOverUI.SetActive(false);
-        playerHealth.onDead += OnGameOver; // Lắng nghe sự kiện khi người chơi chết.
-                                           // Thêm vào danh sách hàm onDead
+
+        playerHealth.onDead += OnGameOver; // Khi player chết
     }
-    private void Update()
-    {
-        if (EnemyHealth.LivingEnemyCount <= 0)
-        {
-            OnGameWin();
-        }
-    }
+
     private void OnGameOver()
     {
         gameOverUI.SetActive(true);
         bgMusic.SetActive(false);
-
         this.enabled = false;
     }
-    private void OnGameWin()
+
+    public void OnGameWin()
     {
         gameWinUI.SetActive(true);
         bgMusic.SetActive(false);
+
         if (playerHealth != null)
         {
             playerHealth.gameObject.SetActive(false);
         }
+
         this.enabled = false;
     }
+
     public void ReturnToMainMenu() => SceneManager.LoadScene("MainMenu");
 }

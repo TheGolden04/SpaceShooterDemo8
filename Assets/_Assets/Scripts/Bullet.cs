@@ -13,9 +13,10 @@ public class Bullet : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        var enemy = collision.GetComponent<EnemyHealth>(); // Thử lấy component "EnemyHealth" từ đối tượng đã va chạm.
+        var enemy = collision.GetComponent<Health>(); // Thử lấy component "EnemyHealth" từ đối tượng đã va chạm.
         if (enemy != null) // Nếu "enemy" không bằng "null", nghĩa là chúng ta đã va chạm với một kẻ địch.
         {
+            Debug.Log("Hit something with Health: " + collision.name);
             // Nếu đúng là kẻ địch, gọi hàm TakeDamage() của nó và truyền vào lượng sát thương của viên đạn.
             enemy.TakeDamage(damage);
         }

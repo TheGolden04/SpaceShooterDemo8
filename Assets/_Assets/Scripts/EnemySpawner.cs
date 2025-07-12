@@ -8,29 +8,37 @@ public class EnemySpawner : MonoBehaviour
     public EnemyWave[] enemyWaves; // Mảng các đợt kẻ địch (wave) được cấu hình sẵn trong Inspector
     private int currentWave;       // Đánh dấu wave hiện tại đang được sinh
 
+    public bool allWavesSpawned = false; // ✅ Đánh dấu đã sinh xong toàn bộ wave
+
     void Start()
     {
         SpawnEnemyWave(); // Bắt đầu sinh wave đầu tiên
     }
+
     // Hàm sinh wave hiện tại
     private void SpawnEnemyWave()
     {
-        var waveInfo = enemyWaves[currentWave];         // Lấy thông tin wave hiện tại
-        var startPosition = waveInfo.flyPath[0];        // Lấy vị trí xuất phát (điểm đầu tiên trong FlyPath)
+        var waveInfo = enemyWaves[currentWave];       // Lấy thông tin wave hiện tại
+        var startPosition = waveInfo.flyPath[0];      // Lấy vị trí xuất phát (điểm đầu tiên trong FlyPath)
 
         for (int i = 0; i < waveInfo.numberOfEnemy; i++) // Lặp theo số lượng enemy trong wave
         {
             var enemy = Instantiate(waveInfo.enemyPrefab, startPosition, Quaternion.identity); // Sinh enemy tại vị trí bắt đầu
             var agent = enemy.GetComponent<FlyPathAgent>(); // Lấy component FlyPathAgent từ enemy
-            agent.flyPath = waveInfo.flyPath;               // Gán đường bay cho enemy
-            agent.flySpeed = waveInfo.speed;                // Gán tốc độ bay
-            startPosition += waveInfo.formationOffset;      // Cộng thêm offset để tạo đội hình (ví dụ: xếp hàng ngang)
+            agent.flyPath = waveInfo.flyPath;             // Gán đường bay cho enemy
+            agent.flySpeed = waveInfo.speed;              // Gán tốc độ bay
+            startPosition += waveInfo.formationOffset;    // Cộng thêm offset để tạo đội hình
         }
+
         currentWave++; // Tăng chỉ số wave hiện tại
-        // Nếu còn wave kế tiếp, gọi lại hàm SpawnEnemyWave sau khoảng delay đã định
+
         if (currentWave < enemyWaves.Length)
         {
-            Invoke(nameof(SpawnEnemyWave), waveInfo.nextWaveDelay);
+            Invoke(nameof(SpawnEnemyWave), waveInfo.nextWaveDelay); // Gọi wave tiếp theo
+        }
+        else
+        {
+            allWavesSpawned = true; // Đã spawn xong tất cả wave
         }
     }
 }

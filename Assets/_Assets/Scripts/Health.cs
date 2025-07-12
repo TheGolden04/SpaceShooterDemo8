@@ -12,10 +12,9 @@ public class Health : MonoBehaviour
                                  // Như 1 danh sách các con trỏ trỏ đến các hàm, không có tham số hay kiểu dữ liệu trả về
     public System.Action onHealthChanged;
 
-
     private void Start()
     {
-        healthPoint = defaultHealthPoint; // Gán giá trị máu hiện tại bằng giá trị máu ban đầu đã thiết lập.
+        healthPoint = defaultHealthPoint;
         onHealthChanged?.Invoke();
     }
 
@@ -31,6 +30,7 @@ public class Health : MonoBehaviour
         {
             Die(); // Nếu có, gọi hàm Die() để xử lý cái chết.
         }
+        Debug.Log($"{gameObject.name} took damage, HP now: {healthPoint}");
     }
 
     // public void OnTriggerEnter2D(Collider2D collision) => Die(); Gây lỗi logic ở đây

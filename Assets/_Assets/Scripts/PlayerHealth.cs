@@ -9,4 +9,8 @@ public class PlayerHealth : Health
         base.Die(); // gọi đến hàm Die() gốc của lớp cha (lớp Health).
         Debug.Log("Player died");
     }
+    public bool IsAlive()
+    {
+        return healthPoint > 0;
+    }
 }
