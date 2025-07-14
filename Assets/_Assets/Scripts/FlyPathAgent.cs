@@ -5,49 +5,50 @@ using UnityEngine;
 // Script điều khiển đối tượng bay theo các điểm định sẵn (waypoints)
 public class FlyPathAgent : MonoBehaviour
 {
-    public FlyPath flyPath;           // Tham chiếu đến đối tượng chứa các waypoint (điểm bay)
-    public float flySpeed;            // Tốc độ bay của đối tượng
-    private int nextIndex = 1;        // Chỉ số của waypoint kế tiếp cần bay tới (bắt đầu từ 1)
+    public Transform flyPath;         // Đối tượng chứa các waypoint (các Transform con)
+    public float flySpeed = 2f;       // Tốc độ bay
+    private int nextIndex = 0;        // Index của điểm kế tiếp
 
     void Update()
     {
-        if (flyPath == null) return;                  // Nếu chưa gán flyPath thì thoát
-        if (nextIndex >= flyPath.waypoints.Length)
+        if (flyPath == null || flyPath.childCount == 0) return;
+
+        if (nextIndex >= flyPath.childCount)
         {
-            Destroy(gameObject);
+            Destroy(gameObject); // Hết đường bay thì huỷ đối tượng
             return;
         }
 
-        if (transform.position != flyPath[nextIndex]) // Nếu chưa đến waypoint kế tiếp
+        Transform target = flyPath.GetChild(nextIndex);
+        Vector3 targetPos = target.position;
+
+        // Nếu chưa tới target thì bay tới
+        if (Vector3.Distance(transform.position, targetPos) > 0.05f)
         {
-            FlyToNextWaypoint();                      // Di chuyển đến waypoint kế tiếp
-            LookAt(flyPath[nextIndex]);               // Xoay đối tượng để nhìn hướng bay
+            FlyToNextWaypoint(targetPos);
+            LookAt(targetPos);
         }
         else
         {
-            nextIndex++;                              // Khi đến waypoint, chuyển sang waypoint kế tiếp
+            nextIndex++; // Đến nơi thì tăng chỉ số điểm tiếp theo
         }
     }
 
-    // Hàm di chuyển đối tượng dần về waypoint kế tiếp
-    private void FlyToNextWaypoint()
+    private void FlyToNextWaypoint(Vector3 destination)
     {
         transform.position = Vector3.MoveTowards(
             transform.position,
-            flyPath[nextIndex],
+            destination,
             flySpeed * Time.deltaTime
         );
     }
 
-    // Hàm xoay đối tượng để nhìn theo hướng bay
-    private void LookAt(Vector2 destination)
+    private void LookAt(Vector3 destination)
     {
-        Vector2 position = transform.position;        // Lấy vị trí hiện tại
-        var lookDirection = destination - position;   // Tính vector hướng đến điểm đích
+        Vector3 dir = destination - transform.position;
+        if (dir.magnitude < 0.01f) return;
 
-        if (lookDirection.magnitude < 0.01f) return;  // Nếu gần như không có hướng (đã đến đích) thì không xoay
-
-        var angle = Vector2.SignedAngle(Vector3.down, lookDirection); // Tính góc xoay từ hướng xuống (mặc định) đến hướng bay
-        transform.rotation = Quaternion.Euler(0, 0, angle);           // Xoay đối tượng theo góc tính được
+        float angle = Vector2.SignedAngle(Vector2.down, dir); // Xoay theo hướng bay
+        transform.rotation = Quaternion.Euler(0, 0, angle);
     }
 }

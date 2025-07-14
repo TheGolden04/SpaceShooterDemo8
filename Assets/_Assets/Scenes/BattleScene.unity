@@ -2984,57 +2984,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 72b855113bbc83d4f84f30c4fe116229, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enemyWaves:
-  - enemyPrefab: {fileID: 7494052960479312734, guid: 67626fd8cb1728b46972aa6a308ae63c,
-      type: 3}
-    numberOfEnemy: 10
-    formationOffset: {x: 0, y: 2, z: 0}
-    flyPath: {fileID: 1859428360}
-    speed: 2
-    nextWaveDelay: 7
-  - enemyPrefab: {fileID: 7494052960479312734, guid: 0f54fbf86c0b58546abed05ccd58c82c,
-      type: 3}
-    numberOfEnemy: 5
-    formationOffset: {x: 0, y: 2, z: 0}
-    flyPath: {fileID: 445468162}
-    speed: 3
-    nextWaveDelay: 5
-  - enemyPrefab: {fileID: 7494052960479312734, guid: 67626fd8cb1728b46972aa6a308ae63c,
-      type: 3}
-    numberOfEnemy: 10
-    formationOffset: {x: 0, y: 2, z: 0}
-    flyPath: {fileID: 2028150145}
-    speed: 3
-    nextWaveDelay: 5
-  - enemyPrefab: {fileID: 7494052960479312734, guid: 67626fd8cb1728b46972aa6a308ae63c,
-      type: 3}
-    numberOfEnemy: 7
-    formationOffset: {x: 0, y: 2, z: 0}
-    flyPath: {fileID: 1295219830}
-    speed: 2
-    nextWaveDelay: 1
-  - enemyPrefab: {fileID: 7494052960479312734, guid: 67626fd8cb1728b46972aa6a308ae63c,
-      type: 3}
-    numberOfEnemy: 7
-    formationOffset: {x: 0, y: 2, z: 0}
-    flyPath: {fileID: 2028150145}
-    speed: 2
-    nextWaveDelay: 2
-  - enemyPrefab: {fileID: 7494052960479312734, guid: 67626fd8cb1728b46972aa6a308ae63c,
-      type: 3}
-    numberOfEnemy: 7
-    formationOffset: {x: 0, y: 2, z: 0}
-    flyPath: {fileID: 1859428360}
-    speed: 3
-    nextWaveDelay: 1
-  - enemyPrefab: {fileID: 7494052960479312734, guid: e7f1627564f67b048a20d6b12241d3f1,
-      type: 3}
-    numberOfEnemy: 1
-    formationOffset: {x: 0, y: 2, z: 0}
-    flyPath: {fileID: 951531990}
-    speed: 0.3
-    nextWaveDelay: 7
+  waveSet: {fileID: 11400000, guid: c90aaeb6b5c990746b2ad1c648901994, type: 2}
   allWavesSpawned: 0
+  winCanvas: {fileID: 641802213}
+  loseCanvas: {fileID: 988043134}
 --- !u!1001 &878666327
 PrefabInstance:
   m_ObjectHideFlags: 0

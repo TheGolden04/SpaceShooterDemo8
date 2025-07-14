@@ -1,44 +1,98 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-// Script sinh ra các đợt kẻ địch theo thông tin cấu hình từ mảng EnemyWave
 public class EnemySpawner : MonoBehaviour
 {
-    public EnemyWave[] enemyWaves; // Mảng các đợt kẻ địch (wave) được cấu hình sẵn trong Inspector
-    private int currentWave;       // Đánh dấu wave hiện tại đang được sinh
+    public EnemyWaveSet waveSet;
+    private int currentWave = 0;
+    public bool allWavesSpawned = false;
 
-    public bool allWavesSpawned = false; // ✅ Đánh dấu đã sinh xong toàn bộ wave
+    public GameObject winCanvas;
+    public GameObject loseCanvas;
+
+    private bool bossSpawned = false;
 
     void Start()
     {
-        SpawnEnemyWave(); // Bắt đầu sinh wave đầu tiên
+        StartCoroutine(SpawnAllWaves());
     }
 
-    // Hàm sinh wave hiện tại
-    private void SpawnEnemyWave()
+    IEnumerator SpawnAllWaves()
     {
-        var waveInfo = enemyWaves[currentWave];       // Lấy thông tin wave hiện tại
-        var startPosition = waveInfo.flyPath[0];      // Lấy vị trí xuất phát (điểm đầu tiên trong FlyPath)
-
-        for (int i = 0; i < waveInfo.numberOfEnemy; i++) // Lặp theo số lượng enemy trong wave
+        while (currentWave < waveSet.waves.Length)
         {
-            var enemy = Instantiate(waveInfo.enemyPrefab, startPosition, Quaternion.identity); // Sinh enemy tại vị trí bắt đầu
-            var agent = enemy.GetComponent<FlyPathAgent>(); // Lấy component FlyPathAgent từ enemy
-            agent.flyPath = waveInfo.flyPath;             // Gán đường bay cho enemy
-            agent.flySpeed = waveInfo.speed;              // Gán tốc độ bay
-            startPosition += waveInfo.formationOffset;    // Cộng thêm offset để tạo đội hình
+            var wave = waveSet.waves[currentWave];
+
+            // Kiểm tra nếu là wave boss
+            bool isBossWave = wave.enemyPrefab.name.Contains("Boss");
+            if (isBossWave)
+                bossSpawned = true;
+
+            SpawnWave(wave);
+
+            // Nếu không phải boss, đợi enemy tiêu diệt hết
+            if (!isBossWave)
+            {
+                yield return new WaitUntil(() => GameObject.FindGameObjectsWithTag("Enemy").Length == 0);
+                yield return new WaitForSeconds(wave.nextDelay);
+            }
+            else
+            {
+                // Nếu là boss, đợi đến khi boss bị tiêu diệt hoặc rời màn hình
+                yield return new WaitUntil(() => GameObject.FindGameObjectWithTag("Boss") == null);
+
+                yield return new WaitForSeconds(0.5f); // Delay nhỏ sau boss chết
+
+                if (GameObject.FindGameObjectWithTag("Boss") == null)
+                {
+                    Debug.Log("Boss defeated! You win!");
+                    if (winCanvas != null) winCanvas.SetActive(true);
+                }
+                else
+                {
+                    Debug.Log("Boss survived! Game Over!");
+                    if (loseCanvas != null) loseCanvas.SetActive(true);
+                }
+
+                yield break; // Kết thúc coroutine tại boss wave
+            }
+
+            currentWave++;
         }
 
-        currentWave++; // Tăng chỉ số wave hiện tại
+        allWavesSpawned = true;
+    }
 
-        if (currentWave < enemyWaves.Length)
+    private void SpawnWave(EnemyWaveData wave)
+    {
+        Transform flyPath = GameObject.Find(wave.flyPathName)?.transform;
+
+        if (flyPath == null)
         {
-            Invoke(nameof(SpawnEnemyWave), waveInfo.nextWaveDelay); // Gọi wave tiếp theo
+            Debug.LogError("FlyPath not found: " + wave.flyPathName);
+            return;
         }
-        else
+
+        Vector3 spawnPos = flyPath.GetChild(0).position;
+
+        for (int i = 0; i < wave.number; i++)
         {
-            allWavesSpawned = true; // Đã spawn xong tất cả wave
+            GameObject enemy = Instantiate(wave.enemyPrefab, spawnPos, Quaternion.identity);
+
+            // Phân loại tag
+            if (wave.enemyPrefab.name.Contains("Boss"))
+                enemy.tag = "Boss";
+            else
+                enemy.tag = "Enemy";
+
+            var agent = enemy.GetComponent<FlyPathAgent>();
+            if (agent != null)
+            {
+                agent.flyPath = flyPath;
+                agent.flySpeed = wave.speed;
+            }
+
+            spawnPos += wave.formationOffset;
         }
     }
 }
