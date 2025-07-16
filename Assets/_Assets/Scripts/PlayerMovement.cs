@@ -2,90 +2,103 @@
 
 public class PlayerMovement : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 10f; // Tốc độ di chuyển của máy bay
-    private bool isPlayerDragging = false;          // Cờ kiểm tra xem người chơi có đang kéo máy bay không
-    private Vector3 dragOffset;                     // Khoảng cách giữa vị trí máy bay và vị trí kéo
-    private Camera mainGameCamera;                  // Camera chính để chuyển đổi tọa độ màn hình về thế giới
+    [SerializeField] private float moveSpeed = 10f;         // Tốc độ tối đa
+    [SerializeField] private float joystickRadius = 100f;   // Bán kính joystick ảo (tính bằng pixel)
+
+    private Camera mainGameCamera;          // Camera chính
+    private Vector2 startTouchPosition;     // Vị trí bắt đầu chạm
+    private Vector2 currentDirection;       // Hướng di chuyển
+    private float currentSpeed = 0f;        // Tốc độ hiện tại phụ thuộc độ kéo
+    private bool isTouching = false;        // Cờ đang chạm
 
     void Awake()
     {
-        mainGameCamera = Camera.main; // Gán camera chính từ tag "MainCamera"
+        mainGameCamera = Camera.main;
         if (mainGameCamera == null)
         {
-            Debug.LogError("PlayerMovement: Không tìm thấy Camera chính (MainCamera). Hãy kiểm tra Tag của Camera trong scene.");
+            Debug.LogError("Không tìm thấy Main Camera. Gán tag 'MainCamera' cho camera.");
         }
     }
 
     void Update()
     {
 #if UNITY_EDITOR
-        // --- Điều khiển bằng CHUỘT trong Unity Editor ---
-        if (Input.GetMouseButtonDown(0)) // Khi nhấn chuột trái
-        {
-            Vector3 mouseWorldPos = mainGameCamera.ScreenToWorldPoint(Input.mousePosition); // Lấy vị trí chuột trong thế giới
-            mouseWorldPos.z = 0; // Gán Z = 0 vì game là 2D
-
-            RaycastHit2D hit = Physics2D.Raycast(mouseWorldPos, Vector2.zero); // Raycast tại vị trí chuột
-            if (hit.collider != null && hit.collider.gameObject == gameObject) // Nếu raycast trúng chính GameObject này
-            {
-                isPlayerDragging = true; // Bắt đầu kéo
-                dragOffset = transform.position - mouseWorldPos; // Tính khoảng cách giữa chuột và máy bay
-            }
-        }
-        else if (Input.GetMouseButton(0) && isPlayerDragging) // Khi đang giữ chuột và đã bắt đầu kéo
-        {
-            Vector3 mouseWorldPos = mainGameCamera.ScreenToWorldPoint(Input.mousePosition);
-            mouseWorldPos.z = 0;
-            Vector3 targetPosition = mouseWorldPos + dragOffset; // Vị trí đích sau khi cộng offset
-            MovePlayerClamped(targetPosition); // Di chuyển tới vị trí đích
-        }
-        else if (Input.GetMouseButtonUp(0)) // Khi nhả chuột ra
-        {
-            isPlayerDragging = false; // Dừng kéo
-        }
+        HandleMouseInput();
 #else
-        // --- Điều khiển bằng CẢM ỨNG trên thiết bị di động ---
-        if (Input.touchCount > 0) // Có ít nhất một ngón tay chạm
-        {
-            Touch firstTouch = Input.GetTouch(0); // Lấy ngón tay đầu tiên
-            Vector3 touchWorldPos = mainGameCamera.ScreenToWorldPoint(firstTouch.position);
-            touchWorldPos.z = 0;
-
-            if (firstTouch.phase == TouchPhase.Began) // Khi bắt đầu chạm
-            {
-                RaycastHit2D hit = Physics2D.Raycast(touchWorldPos, Vector2.zero); // Raycast tại điểm chạm
-                if (hit.collider != null && hit.collider.gameObject == gameObject) // Nếu trúng máy bay
-                {
-                    isPlayerDragging = true;
-                    dragOffset = transform.position - touchWorldPos;
-                }
-            }
-            else if (firstTouch.phase == TouchPhase.Moved && isPlayerDragging) // Nếu ngón tay đang di chuyển và đang kéo
-            {
-                Vector3 targetPosition = touchWorldPos + dragOffset;
-                MovePlayerClamped(targetPosition); // Di chuyển máy bay theo ngón tay
-            }
-            else if (firstTouch.phase == TouchPhase.Ended || firstTouch.phase == TouchPhase.Canceled) // Khi ngón tay nhấc ra
-            {
-                isPlayerDragging = false; // Dừng kéo
-            }
-        }
+        HandleTouchInput();
 #endif
+
+        if (isTouching)
+        {
+            Vector3 newPos = transform.position + (Vector3)(currentDirection * currentSpeed * Time.deltaTime);
+            MovePlayerClamped(newPos);
+        }
     }
 
-    // Di chuyển máy bay tới vị trí đích nhưng giới hạn trong màn hình
+    void HandleMouseInput()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            startTouchPosition = Input.mousePosition;
+            isTouching = true;
+        }
+        else if (Input.GetMouseButton(0))
+        {
+            Vector2 currentPosition = Input.mousePosition;
+            Vector2 delta = currentPosition - startTouchPosition;
+
+            float distance = Mathf.Min(delta.magnitude, joystickRadius);         // Giới hạn kéo trong bán kính
+            currentDirection = delta.normalized;
+            currentSpeed = moveSpeed * (distance / joystickRadius);             // Tốc độ tỷ lệ độ kéo
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            isTouching = false;
+            currentDirection = Vector2.zero;
+            currentSpeed = 0f;
+        }
+    }
+
+    void HandleTouchInput()
+    {
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
+            Vector2 pos = touch.position;
+
+            if (touch.phase == TouchPhase.Began)
+            {
+                startTouchPosition = pos;
+                isTouching = true;
+            }
+            else if (touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary)
+            {
+                Vector2 delta = pos - startTouchPosition;
+
+                float distance = Mathf.Min(delta.magnitude, joystickRadius);
+                currentDirection = delta.normalized;
+                currentSpeed = moveSpeed * (distance / joystickRadius);
+            }
+            else if (touch.phase == TouchPhase.Ended || touch.phase == TouchPhase.Canceled)
+            {
+                isTouching = false;
+                currentDirection = Vector2.zero;
+                currentSpeed = 0f;
+            }
+        }
+    }
+
     void MovePlayerClamped(Vector3 targetPosition)
     {
-        // Lấy giới hạn màn hình theo tọa độ thế giới
-        Vector3 minBounds = mainGameCamera.ViewportToWorldPoint(new Vector3(0, 0, mainGameCamera.nearClipPlane)); // Góc dưới bên trái
-        Vector3 maxBounds = mainGameCamera.ViewportToWorldPoint(new Vector3(1, 1, mainGameCamera.nearClipPlane)); // Góc trên bên phải
+        // Dùng khoảng cách z > 0 để tránh lỗi ScreenToWorldPoint trả sai
+        float z = Mathf.Abs(mainGameCamera.transform.position.z);
+        Vector3 minBounds = mainGameCamera.ViewportToWorldPoint(new Vector3(0, 0, z));
+        Vector3 maxBounds = mainGameCamera.ViewportToWorldPoint(new Vector3(1, 1, z));
 
-        // Giới hạn vị trí không cho vượt ra ngoài màn hình
         targetPosition.x = Mathf.Clamp(targetPosition.x, minBounds.x, maxBounds.x);
         targetPosition.y = Mathf.Clamp(targetPosition.y, minBounds.y, maxBounds.y);
-        targetPosition.z = 0; // Z phải bằng 0 vì đang dùng 2D
+        targetPosition.z = 0;
 
-        // Di chuyển máy bay mượt mà tới vị trí đích
-        transform.position = Vector3.Lerp(transform.position, targetPosition, moveSpeed * Time.deltaTime);
+        transform.position = targetPosition;
     }
 }

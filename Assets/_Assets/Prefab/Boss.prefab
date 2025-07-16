@@ -129,6 +129,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   flyPath: {fileID: 0}
   flySpeed: 1
+  tocDoXoay: 50
 --- !u!114 &-2781808121597476340
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -8,6 +8,7 @@ public class FlyPathAgent : MonoBehaviour
     public Transform flyPath;         // Đối tượng chứa các waypoint (các Transform con)
     public float flySpeed = 2f;       // Tốc độ bay
     private int nextIndex = 0;        // Index của điểm kế tiếp
+    public int tocDoXoay;             // Tốc độ xoay của enemy khi hướng đến waypoint kế tiếp
 
     void Update()
     {
@@ -47,8 +48,9 @@ public class FlyPathAgent : MonoBehaviour
     {
         Vector3 dir = destination - transform.position;
         if (dir.magnitude < 0.01f) return;
-
         float angle = Vector2.SignedAngle(Vector2.down, dir); // Xoay theo hướng bay
-        transform.rotation = Quaternion.Euler(0, 0, angle);
+        Quaternion x = Quaternion.Euler(0, 0, angle);
+        transform.rotation = Quaternion.RotateTowards(transform.rotation, x, tocDoXoay * Time.deltaTime);
+        Debug.Log(transform.rotation);
     }
 }

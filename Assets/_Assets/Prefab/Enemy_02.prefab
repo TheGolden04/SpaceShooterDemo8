@@ -181,6 +181,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   flyPath: {fileID: 0}
   flySpeed: 1
+  tocDoXoay: 80
 --- !u!1 &2696685355826233466
 GameObject:
   m_ObjectHideFlags: 0
